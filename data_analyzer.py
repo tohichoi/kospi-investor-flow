@@ -122,6 +122,21 @@ def make_figure(df: pd.DataFrame) -> go.Figure:
 		margin=dict(t=80, b=60, l=60, r=80),
 	)
 
+	# draw a baseline at 0 on the right-side axis (yaxis2) so positive/negative
+	# volumes are visually anchored
+	fig.add_shape(
+		dict(
+			type="line",
+			xref="paper",
+			x0=0,
+			x1=1,
+			yref="y2",
+			y0=0,
+			y1=0,
+			line=dict(color="#6b7280", width=1, dash="dash"),
+		)
+	)
+
 	fig.update_xaxes(rangeslider_visible=True)
 	return fig
 
@@ -170,6 +185,19 @@ def make_original_figure(df: pd.DataFrame) -> go.Figure:
 		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 		margin=dict(t=80, b=60, l=60, r=80)
 	)
+
+	# baseline at 0 on the right axis for consistency with accumulated view
+	fig.add_shape(dict(
+		type="line",
+		xref="paper",
+		x0=0,
+		x1=1,
+		yref="y2",
+		y0=0,
+		y1=0,
+		line=dict(color="#6b7280", width=1, dash="dash"),
+	))
+
 	fig.update_xaxes(rangeslider_visible=True)
 	return fig
 
@@ -219,6 +247,19 @@ def make_accumulated_figure(df: pd.DataFrame) -> go.Figure:
 		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 		margin=dict(t=80, b=60, l=60, r=80),
 	)
+
+	# draw baseline at 0 on the right (accumulated) axis so zero is clearly visible
+	fig.add_shape(dict(
+		type="line",
+		xref="paper",
+		x0=0,
+		x1=1,
+		yref="y2",
+		y0=0,
+		y1=0,
+		line=dict(color="#6b7280", width=1, dash="dash"),
+	))
+
 	fig.update_xaxes(rangeslider_visible=True)
 	return fig
 
