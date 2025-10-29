@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600">
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  <g font-family="Segoe UI, Roboto, Arial" fill="#374151">
+    <rect x="40" y="40" width="920" height="80" rx="6" fill="#0d6efd" />
+    <text x="70" y="90" font-size="28" fill="#fff">Korea Investment Data Analyzer — Running (placeholder)</text>
+
+    <rect x="40" y="140" width="640" height="360" rx="6" fill="#ffffff" stroke="#e5e7eb"/>
+    <text x="60" y="180" font-size="14" fill="#6b7280">[Chart area placeholder]</text>
+
+    <rect x="700" y="160" width="220" height="60" rx="6" fill="#fff" stroke="#e5e7eb"/>
+    <text x="720" y="200" font-size="12" fill="#6b7280">지수 (Index)</text>
+
+    <rect x="700" y="240" width="220" height="60" rx="6" fill="#fff" stroke="#e5e7eb"/>
+    <text x="720" y="280" font-size="12" fill="#6b7280">외국인 / 개인 / 기관 (Volumes)</text>
+
+    <rect x="40" y="520" width="920" height="40" rx="6" fill="#fff" stroke="#e5e7eb"/>
+    <text x="70" y="545" font-size="12" fill="#6b7280">http://127.0.0.1:8050</text>
+  </g>
+</svg>
