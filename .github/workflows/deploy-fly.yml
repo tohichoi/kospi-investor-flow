@@ -1,0 +1,26 @@
+name: Deploy to Fly
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FLY_APP: kospi-investor-flow
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          echo "::add-path::$HOME/.fly/bin"
+
+      - name: Deploy to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_APP: ${{ env.FLY_APP }}
+        run: |
+          # `flyctl deploy` uses the FLY_API_TOKEN environment variable for auth
+          $HOME/.fly/bin/flyctl deploy --config fly.toml --app "$FLY_APP" --detach

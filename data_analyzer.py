@@ -36,6 +36,7 @@ if not hasattr(pkgutil, "find_loader"):
 
 	setattr(pkgutil, "find_loader", _find_loader)
 
+import os
 import pandas as pd
 from dash import Dash, html, dcc, Input, Output, no_update
 import plotly.graph_objects as go
@@ -395,8 +396,9 @@ def main():
 		sys.exit(1)
 
 	app = create_app(data_file)
-	# Default port 8050; bind to 127.0.0.1
-	app.run(debug=True, host="127.0.0.1", port=8050)
+	# Read PORT from environment (used by hosting platforms). Bind to all interfaces.
+	port = int(os.environ.get("PORT", "8050"))
+	app.run(debug=False, host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":

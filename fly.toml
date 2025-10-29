@@ -1,0 +1,21 @@
+app = "kospi-investor-flow"
+primary_region = "iad"
+
+[[services]]
+  internal_port = 8050
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls","http"]
+
+  [[services.http_checks]]
+    interval = 10000
+    timeout = 2000
+    method = "get"
+    path = "/"
+    protocol = "http"
