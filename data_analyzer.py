@@ -90,7 +90,7 @@ def make_figure(df: pd.DataFrame) -> go.Figure:
 					mode="lines",
 					name=name,
 					yaxis="y",
-					line=dict(width=4, shape="spline", smoothing=1.3),
+					line=dict(width=4, shape="linear"),
 					connectgaps=True,
 				)
 			)
@@ -107,7 +107,7 @@ def make_figure(df: pd.DataFrame) -> go.Figure:
 					mode="lines",
 					name=f"{name} (누적)",
 					yaxis="y2",
-					line=dict(width=2.5, shape="spline", smoothing=1.1),
+					line=dict(width=2.5, shape="linear"),
 					connectgaps=True,
 				)
 			)
@@ -142,8 +142,13 @@ def make_figure(df: pd.DataFrame) -> go.Figure:
 	return fig
 
 
-def make_original_figure(df: pd.DataFrame) -> go.Figure:
-	"""Create the original (raw) data figure: 지수 (left) and others (right) as-is."""
+def make_original_figure(df: pd.DataFrame, show_lines: bool = True, show_bars: bool = True) -> go.Figure:
+	"""Create the original (raw) data figure: 지수 (left) and others (right) as-is.
+
+	Parameters
+	- show_lines: whether to include the line traces for right-side series
+	- show_bars: whether to include semi-transparent bar traces for right-side series
+	"""
 	fig = go.Figure()
 	x = df.get("날짜")
 	# left: 지수
@@ -155,8 +160,8 @@ def make_original_figure(df: pd.DataFrame) -> go.Figure:
 				mode="lines",
 				name="지수",
 				yaxis="y",
-				line=dict(width=4, shape="spline", smoothing=1.3),
-				connectgaps=True,
+				line=dict(width=4, shape="linear"),
+				connectgaps=False,
 			)
 		)
 
@@ -164,17 +169,31 @@ def make_original_figure(df: pd.DataFrame) -> go.Figure:
 	for name in ["외국인", "개인", "기관종합"]:
 		if name in df.columns:
 			series = pd.to_numeric(df[name], errors="coerce")
-			fig.add_trace(
-				go.Scatter(
-					x=x,
-					y=series,
-					mode="lines",
-					name=name,
-					yaxis="y2",
-					line=dict(width=2.5, shape="spline", smoothing=1.1, color=SERIES_COLORS[name]),
-					connectgaps=True,
+			# add bar if requested
+			if show_bars:
+				fig.add_trace(
+					go.Bar(
+						x=x,
+						y=series,
+						name=f"{name} (bar)",
+						yaxis="y2",
+						marker=dict(color=SERIES_COLORS[name]),
+						opacity=0.35,
+					)
 				)
-			)
+			# add line if requested
+			if show_lines:
+				fig.add_trace(
+					go.Scatter(
+						x=x,
+						y=series,
+						mode="lines",
+						name=name,
+						yaxis="y2",
+						line=dict(width=2.5, shape="linear", color=SERIES_COLORS[name]),
+						connectgaps=False,
+					)
+				)
 	
 	fig.update_layout(
 		title="원본 데이터 (Raw)",
@@ -183,6 +202,7 @@ def make_original_figure(df: pd.DataFrame) -> go.Figure:
 		yaxis2=dict(title="외국인/개인/기관 (우측)", overlaying="y", side="right"),
 		hovermode="x unified",
 		height=800,  # taller figure for better visibility
+		barmode="overlay",
 		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 		margin=dict(t=80, b=60, l=60, r=80)
 	)
@@ -203,12 +223,17 @@ def make_original_figure(df: pd.DataFrame) -> go.Figure:
 	return fig
 
 
-def make_accumulated_figure(df: pd.DataFrame) -> go.Figure:
-	"""Create the accumulated figure: right-side series are cumulative; 지수 kept as raw for reference."""
+def make_accumulated_figure(df: pd.DataFrame, show_lines: bool = True, show_bars: bool = True) -> go.Figure:
+	"""Create the accumulated figure: right-side series are cumulative; 지수 kept as raw for reference.
+
+	Parameters
+	- show_lines: whether to include the line traces for right-side accumulated series
+	- show_bars: whether to include semi-transparent bar traces for right-side accumulated series
+	"""
 	fig = go.Figure()
 	x = df.get("날짜")
 
-	# left: 지수 (raw, emphasized)
+	# left: 지수 (raw, emphasized) - keep visible as reference
 	if "지수" in df.columns:
 		fig.add_trace(
 			go.Scatter(
@@ -217,26 +242,40 @@ def make_accumulated_figure(df: pd.DataFrame) -> go.Figure:
 				mode="lines",
 				name="지수",
 				yaxis="y",
-				line=dict(width=4, shape="spline", smoothing=1.3),
-				connectgaps=True,
+				line=dict(width=4, shape="linear"),
+				connectgaps=False,  # match behavior with original figure
 			)
 		)
 
 	# right: accumulated 외국인, 개인, 기관종합
 	for name in ["외국인", "개인", "기관종합"]:
 		if name in df.columns:
-			series = pd.to_numeric(df[name], errors="coerce").fillna(0).cumsum()
-			fig.add_trace(
-				go.Scatter(
-					x=x,
-					y=series,
-					mode="lines",
-					name=f"{name} (누적)",
-					yaxis="y2",
-					line=dict(width=2.5, shape="spline", smoothing=1.1, color=SERIES_COLORS[name]),
-					connectgaps=True,
+			series = pd.to_numeric(df[name]-df[name].iloc[0], errors="coerce").fillna(0).cumsum()
+			# add bar if requested
+			if show_bars:
+				fig.add_trace(
+					go.Bar(
+						x=x,
+						y=series,
+						name=f"{name} (누적, bar)",
+						yaxis="y2",
+						marker=dict(color=SERIES_COLORS[name]),
+						opacity=0.35,  # semi-transparent bars
+					)
 				)
-			)
+			# add line if requested
+			if show_lines:
+				fig.add_trace(
+					go.Scatter(
+						x=x,
+						y=series,
+						mode="lines",
+						name=f"{name} (누적)",
+						yaxis="y2",
+						line=dict(width=2.5, shape="linear", color=SERIES_COLORS[name]),
+						connectgaps=False,  # match behavior with original figure
+					)
+				)
 
 	fig.update_layout(
 		title="누적 값 (Accumulated)",
@@ -245,8 +284,9 @@ def make_accumulated_figure(df: pd.DataFrame) -> go.Figure:
 		yaxis2=dict(title="외국인/개인/기관 (누적, 우측)", overlaying="y", side="right"),
 		hovermode="x unified",
 		height=800,  # taller figure for better visibility
+		barmode="overlay",  # ensure bars overlay each other
 		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-		margin=dict(t=80, b=60, l=60, r=80),
+		margin=dict(t=80, b=60, l=60, r=80)
 	)
 
 	# draw baseline at 0 on the right (accumulated) axis so zero is clearly visible
@@ -271,27 +311,38 @@ def create_app(data_path: Path) -> Dash:
 	min_date = df["날짜"].min().date()
 	max_date = df["날짜"].max().date()
 	
-	fig_raw = make_original_figure(df)
-	fig_acc = make_accumulated_figure(df)
+	# initial: both lines and bars shown
+	fig_raw = make_original_figure(df, show_lines=True, show_bars=True)
+	# initial accumulated figure: both lines and bars shown
+	fig_acc = make_accumulated_figure(df, show_lines=True, show_bars=True)
 
 	app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 	
 	# Define callback to update graph date ranges
+
+	# Trace toggle control will be added in the layout below (default: both)
 	@app.callback(
 		[Output("raw-graph", "figure"),
 		Output("acc-graph", "figure")],
 		[Input("start-date", "date"),
-		Input("end-date", "date")]
+		Input("end-date", "date"),
+		Input("trace-toggle", "value")]
 	)
-	def update_figures(start_date, end_date):
+	def update_figures(start_date, end_date, trace_toggle):
 		if start_date is not None and end_date is not None:
 			mask = (df["날짜"].dt.date >= pd.Timestamp(start_date).date()) & \
 				   (df["날짜"].dt.date <= pd.Timestamp(end_date).date())
 			filtered_df = df[mask]
 		else:
 			filtered_df = df
-		
-		return make_original_figure(filtered_df), make_accumulated_figure(filtered_df)
+		# trace_toggle is a list like ['lines','bars'] depending on selection
+		show_lines = trace_toggle is None or ('lines' in trace_toggle)
+		show_bars = trace_toggle is None or ('bars' in trace_toggle)
+
+		return (
+			make_original_figure(filtered_df, show_lines=show_lines, show_bars=show_bars),
+			make_accumulated_figure(filtered_df, show_lines=show_lines, show_bars=show_bars),
+		)
 
 	# Calculate some preset ranges
 	today = pd.Timestamp.now().date()
@@ -335,10 +386,23 @@ def create_app(data_path: Path) -> Dash:
 						dcc.Dropdown(
 							id="date-preset",
 							options=[{'label': v['label'], 'value': k} for k, v in date_presets.items()],
-							value="all",
+							value="90d",
 							style={"width": "200px"},
 							clearable=False
 						)
+					], width="auto", className="me-4"),
+					dbc.Col([
+						dbc.Label("표시 옵션:", className="me-2"),
+						dcc.Checklist(
+							id="trace-toggle",
+							options=[
+								{"label": "Lines", "value": "lines"},
+								{"label": "Bars", "value": "bars"},
+							],
+							value=["lines", "bars"],
+							inline=True,
+							inputStyle={"margin-right": "6px"}
+						),
 					], width="auto", className="me-4"),
 					dbc.Col([
 						dbc.Label("시작일:", className="me-2"),
@@ -398,7 +462,7 @@ def main():
 	app = create_app(data_file)
 	# Read PORT from environment (used by hosting platforms). Bind to all interfaces.
 	port = int(os.environ.get("PORT", "8050"))
-	app.run(debug=False, host="0.0.0.0", port=port)
+	app.run(debug=True, host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":
